@@ -1,0 +1,74 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RGB Toolbox</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-icon">▦</span> RGB Toolbox</div>
+    <p class="side-label">WORKSPACE</p>
+    <a class="nav-link active" href="/">⌂ &nbsp; Dashboard</a>
+    <div class="sidebar-bottom">LOCAL TOOLS<br><span>Running on your computer</span></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div><span class="eyebrow">YOUR WORKSPACE</span><h1>Dashboard</h1></div>
+      <span class="status"><i></i> Local server</span>
+    </header>
+
+    <section class="welcome">
+      <div>
+        <span class="eyebrow">PYTHON UTILITIES</span>
+        <h2>Your tools, in one place.</h2>
+        <p>Convert files, inspect binary data and visualise RGB pixels.</p>
+      </div>
+      <div class="welcome-art">0101<br>1010<br>0011</div>
+    </section>
+
+    <div class="section-heading">
+      <div><h2>Your tools</h2><p>Select a tool to get started.</p></div>
+      <span class="tool-count">{{ tools|length }} TOOLS</span>
+    </div>
+
+    <section class="tool-grid">
+      {% for tool in tools %}
+      <article class="tool-card">
+        <div class="card-top">
+          <div class="tool-icon icon-{{ loop.index }}">▦</div>
+          <span class="card-number">{{ "%02d"|format(loop.index) }}</span>
+        </div>
+        <h3>{{ tool.name }}</h3>
+        <p>{{ tool.description }}</p>
+        <form class="tool-form" data-tool="{{ tool.id }}">
+          <label class="file-picker">
+            <span class="file-name">Choose {{ tool.accept }} file</span>
+            <input type="file" name="file" accept="{{ tool.accept }}" required>
+          </label>
+          <button type="submit">Run tool <span>↗</span></button>
+        </form>
+      </article>
+      {% endfor %}
+    </section>
+
+    <section id="result-panel" class="result-panel" hidden>
+      <div class="result-heading">
+        <div><span class="eyebrow">OUTPUT</span><h2 id="result-title">Result</h2></div>
+        <button id="clear-result" class="secondary-button" type="button">Clear</button>
+      </div>
+      <p id="result-message"></p>
+      <pre id="text-result" hidden></pre>
+      <div id="pixel-info" hidden></div>
+      <div id="pixel-grid" class="pixel-grid" hidden></div>
+      <a id="download-result" class="download-link" hidden>Download converted file</a>
+    </section>
+
+    <footer>RGB Toolbox <span>•</span> Local Python utilities</footer>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
