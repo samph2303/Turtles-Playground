@@ -123,9 +123,19 @@ def rgb_from_csv(data):
     return pixels
 
 
-@app.get("/")
+@app.route("/")
 def index():
-    return render_template("index.html", tools=TOOLS)
+    return render_template("index.html", tools=TOOLS, page="home")
+
+
+@app.route("/converters")
+def converters():
+    return render_template("index.html", tools=TOOLS, page="converters")
+
+
+@app.route("/rgb")
+def rgb():
+    return render_template("index.html", tools=TOOLS, page="rgb")
 
 
 @app.post("/run/<tool_id>")

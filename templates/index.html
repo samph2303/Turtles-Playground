@@ -10,99 +10,183 @@
 <body>
   <aside class="sidebar">
     <div class="brand"><span class="brand-icon">▦</span> RGB Toolbox</div>
+
     <p class="side-label">WORKSPACE</p>
-    <a class="nav-link active" href="/">⌂ &nbsp; Dashboard</a>
-    <div class="sidebar-bottom">LOCAL TOOLS<br><span>Running on your computer</span></div>
+
+    <a class="nav-link {% if page == 'home' %}active{% endif %}" href="/">
+      ⌂ &nbsp; Home
+    </a>
+    <a class="nav-link {% if page == 'converters' %}active{% endif %}" href="/converters">
+      ⇄ &nbsp; File Converters
+    </a>
+    <a class="nav-link {% if page == 'rgb' %}active{% endif %}" href="/rgb">
+      ▦ &nbsp; RGB Tools
+    </a>
+
+    <div class="sidebar-bottom">
+      LOCAL TOOLS<br>
+      <span>Running on your computer</span>
+    </div>
   </aside>
 
   <main class="main">
     <header class="topbar">
-      <div><span class="eyebrow">YOUR WORKSPACE</span><h1>Dashboard</h1></div>
+      <div>
+        <span class="eyebrow">YOUR WORKSPACE</span>
+        <h1>
+          {% if page == 'home' %}Home
+          {% elif page == 'converters' %}File Converters
+          {% else %}RGB Tools{% endif %}
+        </h1>
+      </div>
       <span class="status"><i></i> Local server</span>
     </header>
+
+    {% if page == 'home' %}
 
     <section class="welcome">
       <div>
         <span class="eyebrow">PYTHON UTILITIES</span>
-        <h2>Your tools, in one place.</h2>
-        <p>Convert files, inspect binary data and visualise RGB pixels.</p>
+        <h2>Welcome to RGB Toolbox.</h2>
+        <p>
+          Your personal collection of file converters and RGB visualisation
+          tools, all accessible from one simple dashboard. Choose a workspace
+          below to get started.
+        </p>
       </div>
       <div class="welcome-art">0101<br>1010<br>0011</div>
     </section>
 
+    <div class="home-cards">
+      <a class="home-card" href="/converters">
+        <div class="home-card-icon">⇄</div>
+        <span class="eyebrow">FILE UTILITIES</span>
+        <h2>File Converters</h2>
+        <p>
+          Convert between TXT, BIN and CSV files, or combine multiple images
+          into a single PDF.
+        </p>
+        <span class="home-card-link">Open converters <span>↗</span></span>
+      </a>
+
+      <a class="home-card" href="/rgb">
+        <div class="home-card-icon">▦</div>
+        <span class="eyebrow">PIXEL VISUALISATION</span>
+        <h2>RGB Tools</h2>
+        <p>
+          Turn binary and CSV data into colourful RGB pixel previews
+          and inspect the resulting data visually.
+        </p>
+        <span class="home-card-link">Open RGB tools <span>↗</span></span>
+      </a>
+    </div>
+
+    {% elif page == 'converters' %}
+
+    <section class="welcome">
+      <div>
+        <span class="eyebrow">FILE UTILITIES</span>
+        <h2>File Converters</h2>
+        <p>
+          Convert files between formats, transform binary data, and combine
+          multiple images into one multi-page PDF.
+        </p>
+      </div>
+      <div class="welcome-art">TXT<br>BIN<br>PDF</div>
+    </section>
+
     <div class="section-heading">
-  <div>
-    <h2>File Converters</h2>
-    <p>Convert files between formats, including combining images into a PDF.</p>
-  </div>
-  <span class="tool-count">
-    {{ tools|selectattr('category', 'equalto', 'converter')|list|length }} TOOLS
-  </span>
-</div>
-
-<section class="tool-grid">
-  {% for tool in tools if tool.category == 'converter' %}
-  <article class="tool-card">
-    <div class="card-top">
-      <div class="tool-icon icon-{{ loop.index }}">▦</div>
-      <span class="card-number">{{ "%02d"|format(loop.index) }}</span>
+      <div>
+        <h2>Available converters</h2>
+        <p>Select a tool and upload your file to begin.</p>
+      </div>
+      <span class="tool-count">
+        {{ tools|selectattr('category', 'equalto', 'converter')|list|length }} TOOLS
+      </span>
     </div>
-    <h3>{{ tool.name }}</h3>
-    <p>{{ tool.description }}</p>
 
-    <form class="tool-form" data-tool="{{ tool.id }}">
-      <label class="file-picker">
-        <span class="file-name">
-          {% if tool.multiple %}Choose image files{% else %}Choose {{ tool.accept }} file{% endif %}
-        </span>
-        <input
-          type="file"
-          name="file"
-          accept="{{ tool.accept }}"
-          {% if tool.multiple %}multiple{% endif %}
-          required
-        >
-      </label>
-      <button type="submit">Run tool <span>↗</span></button>
-    </form>
-  </article>
-  {% endfor %}
-</section>
+    <section class="tool-grid">
+      {% for tool in tools if tool.category == 'converter' %}
+      <article class="tool-card">
+        <div class="card-top">
+          <div class="tool-icon icon-{{ loop.index }}">▦</div>
+          <span class="card-number">{{ "%02d"|format(loop.index) }}</span>
+        </div>
+        <h3>{{ tool.name }}</h3>
+        <p>{{ tool.description }}</p>
 
-<div class="section-heading section-heading-rgb">
-  <div>
-    <h2>RGB Tools</h2>
-    <p>Turn binary and CSV data into visual RGB pixels.</p>
-  </div>
-  <span class="tool-count">
-    {{ tools|selectattr('category', 'equalto', 'rgb')|list|length }} TOOLS
-  </span>
-</div>
+        <form class="tool-form" data-tool="{{ tool.id }}">
+          <label class="file-picker">
+            <span class="file-name">
+              {% if tool.multiple %}Choose image files{% else %}Choose {{ tool.accept }} file{% endif %}
+            </span>
+            <input
+              type="file"
+              name="file"
+              accept="{{ tool.accept }}"
+              {% if tool.multiple %}multiple{% endif %}
+              required
+            >
+          </label>
+          <button type="submit">Run tool <span>↗</span></button>
+        </form>
+      </article>
+      {% endfor %}
+    </section>
 
-<section class="tool-grid">
-  {% for tool in tools if tool.category == 'rgb' %}
-  <article class="tool-card">
-    <div class="card-top">
-      <div class="tool-icon icon-{{ loop.index }}">▦</div>
-      <span class="card-number">{{ "%02d"|format(loop.index) }}</span>
+    {% else %}
+
+    <section class="welcome">
+      <div>
+        <span class="eyebrow">PIXEL VISUALISATION</span>
+        <h2>Explore RGB data.</h2>
+        <p>
+          Convert binary files or CSV colour values into RGB pixels.
+          Upload your data to generate a visual preview.
+        </p>
+      </div>
+      <div class="welcome-art">RGB<br>255<br>000</div>
+    </section>
+
+    <div class="section-heading">
+      <div>
+        <h2>Available RGB tools</h2>
+        <p>Choose a data source to visualise.</p>
+      </div>
+      <span class="tool-count">
+        {{ tools|selectattr('category', 'equalto', 'rgb')|list|length }} TOOLS
+      </span>
     </div>
-    <h3>{{ tool.name }}</h3>
-    <p>{{ tool.description }}</p>
 
-    <form class="tool-form" data-tool="{{ tool.id }}">
-      <label class="file-picker">
-        <span class="file-name">Choose {{ tool.accept }} file</span>
-        <input type="file" name="file" accept="{{ tool.accept }}" required>
-      </label>
-      <button type="submit">Run tool <span>↗</span></button>
-    </form>
-  </article>
-  {% endfor %}
-</section>
+    <section class="tool-grid">
+      {% for tool in tools if tool.category == 'rgb' %}
+      <article class="tool-card">
+        <div class="card-top">
+          <div class="tool-icon icon-{{ loop.index }}">▦</div>
+          <span class="card-number">{{ "%02d"|format(loop.index) }}</span>
+        </div>
+        <h3>{{ tool.name }}</h3>
+        <p>{{ tool.description }}</p>
+
+        <form class="tool-form" data-tool="{{ tool.id }}">
+          <label class="file-picker">
+            <span class="file-name">Choose {{ tool.accept }} file</span>
+            <input type="file" name="file" accept="{{ tool.accept }}" required>
+          </label>
+          <button type="submit">Run tool <span>↗</span></button>
+        </form>
+      </article>
+      {% endfor %}
+    </section>
+
+    {% endif %}
 
     <section id="result-panel" class="result-panel" hidden>
       <div class="result-heading">
-        <div><span class="eyebrow">OUTPUT</span><h2 id="result-title">Result</h2></div>
+        <div>
+          <span class="eyebrow">OUTPUT</span>
+          <h2 id="result-title">Result</h2>
+        </div>
         <button id="clear-result" class="secondary-button" type="button">Clear</button>
       </div>
       <p id="result-message"></p>
@@ -114,6 +198,7 @@
 
     <footer>RGB Toolbox <span>•</span> Local Python utilities</footer>
   </main>
+
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
