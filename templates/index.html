@@ -31,29 +31,74 @@
     </section>
 
     <div class="section-heading">
-      <div><h2>Your tools</h2><p>Select a tool to get started.</p></div>
-      <span class="tool-count">{{ tools|length }} TOOLS</span>
-    </div>
+  <div>
+    <h2>File Converters</h2>
+    <p>Convert files between formats, including combining images into a PDF.</p>
+  </div>
+  <span class="tool-count">
+    {{ tools|selectattr('category', 'equalto', 'converter')|list|length }} TOOLS
+  </span>
+</div>
 
-    <section class="tool-grid">
-      {% for tool in tools %}
-      <article class="tool-card">
-        <div class="card-top">
-          <div class="tool-icon icon-{{ loop.index }}">▦</div>
-          <span class="card-number">{{ "%02d"|format(loop.index) }}</span>
-        </div>
-        <h3>{{ tool.name }}</h3>
-        <p>{{ tool.description }}</p>
-        <form class="tool-form" data-tool="{{ tool.id }}">
-          <label class="file-picker">
-            <span class="file-name">Choose {{ tool.accept }} file</span>
-            <input type="file" name="file" accept="{{ tool.accept }}" required>
-          </label>
-          <button type="submit">Run tool <span>↗</span></button>
-        </form>
-      </article>
-      {% endfor %}
-    </section>
+<section class="tool-grid">
+  {% for tool in tools if tool.category == 'converter' %}
+  <article class="tool-card">
+    <div class="card-top">
+      <div class="tool-icon icon-{{ loop.index }}">▦</div>
+      <span class="card-number">{{ "%02d"|format(loop.index) }}</span>
+    </div>
+    <h3>{{ tool.name }}</h3>
+    <p>{{ tool.description }}</p>
+
+    <form class="tool-form" data-tool="{{ tool.id }}">
+      <label class="file-picker">
+        <span class="file-name">
+          {% if tool.multiple %}Choose image files{% else %}Choose {{ tool.accept }} file{% endif %}
+        </span>
+        <input
+          type="file"
+          name="file"
+          accept="{{ tool.accept }}"
+          {% if tool.multiple %}multiple{% endif %}
+          required
+        >
+      </label>
+      <button type="submit">Run tool <span>↗</span></button>
+    </form>
+  </article>
+  {% endfor %}
+</section>
+
+<div class="section-heading section-heading-rgb">
+  <div>
+    <h2>RGB Tools</h2>
+    <p>Turn binary and CSV data into visual RGB pixels.</p>
+  </div>
+  <span class="tool-count">
+    {{ tools|selectattr('category', 'equalto', 'rgb')|list|length }} TOOLS
+  </span>
+</div>
+
+<section class="tool-grid">
+  {% for tool in tools if tool.category == 'rgb' %}
+  <article class="tool-card">
+    <div class="card-top">
+      <div class="tool-icon icon-{{ loop.index }}">▦</div>
+      <span class="card-number">{{ "%02d"|format(loop.index) }}</span>
+    </div>
+    <h3>{{ tool.name }}</h3>
+    <p>{{ tool.description }}</p>
+
+    <form class="tool-form" data-tool="{{ tool.id }}">
+      <label class="file-picker">
+        <span class="file-name">Choose {{ tool.accept }} file</span>
+        <input type="file" name="file" accept="{{ tool.accept }}" required>
+      </label>
+      <button type="submit">Run tool <span>↗</span></button>
+    </form>
+  </article>
+  {% endfor %}
+</section>
 
     <section id="result-panel" class="result-panel" hidden>
       <div class="result-heading">

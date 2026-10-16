@@ -1,4 +1,5 @@
 
+
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import csv
@@ -17,39 +18,53 @@ app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024  # 32 MB upload limit
 TOOLS = [
     {
         "id": "datadump",
+	    "category": "rgb",
         "name": "BIN → RGB Pixels",
         "description": "Visualise a binary file as RGB pixels.",
         "accept": ".bin",
     },
     {
         "id": "txt2bin",
+	    "category": "converter",
         "name": "TXT → BIN",
         "description": "Convert a text file of binary bits into a binary file.",
         "accept": ".txt",
     },
     {
         "id": "bin2txt",
+	    "category": "converter",
         "name": "BIN → TXT",
         "description": "Convert each byte into eight text bits.",
         "accept": ".bin",
     },
     {
         "id": "bin2bits",
+	    "category": "converter",
         "name": "BIN → Bits",
         "description": "Display the binary contents of a file.",
         "accept": ".bin",
     },
     {
         "id": "csv2rgb",
+	    "category": "rgb",
         "name": "CSV → RGB Pixels",
         "description": "Visualise RGB values from a CSV file.",
         "accept": ".csv",
     },
     {
         "id": "bin2csv",
+	    "category": "converter",
         "name": "BIN → CSV",
         "description": "Convert every three bytes into an RGB CSV row.",
         "accept": ".bin",
+    },
+    {
+        "id": "img2pdf",
+        "category": "converter",
+        "name": "Images → PDF",
+        "description": "Combine multiple images into one multi-page PDF.",
+        "accept": ".png,.jpg,.jpeg,.webp,.bmp,.gif,.tif,.tiff",
+        "multiple": True,
     },
 ]
 
@@ -119,6 +134,63 @@ def run_tool(tool_id):
 
     if tool is None:
         return jsonify(error="Unknown tool."), 404
+
+    if tool_id == "img2pdf":
+        uploads = [
+            item for item in request.files.getlist("files")
+            if item and item.filename
+        ]
+
+        if not uploads:
+            return jsonify(error="Choose one or more images first."), 400
+
+        try:
+            with TemporaryDirectory(prefix="toolbox-") as temp:
+                temp_dir = Path(temp)
+                image_paths = []
+
+                for index, image_upload in enumerate(uploads, start=1):
+                    image_filename = secure_filename(image_upload.filename)
+
+                    if not image_filename:
+                        raise ValueError("One of the image filenames is invalid.")
+
+                    image_path = temp_dir / f"{index:03d}_{image_filename}"
+                    image_path.write_bytes(image_upload.read())
+                    image_paths.append(image_path)
+
+                output_path = temp_dir / "images.pdf"
+
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        str(SCRIPTS_DIR / "img2pdf.py"),
+                        *[str(path) for path in image_paths],
+                        "--output",
+                        str(output_path),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                )
+
+                if result.returncode != 0 or not output_path.exists():
+                    error = result.stderr.strip() or result.stdout.strip()
+                    raise ValueError(error or "Image to PDF conversion failed.")
+
+                return send_file(
+                    io.BytesIO(output_path.read_bytes()),
+                    as_attachment=True,
+                    download_name="images.pdf",
+                    mimetype="application/pdf",
+                )
+
+        except subprocess.TimeoutExpired:
+            return jsonify(
+                error="The image conversion took too long to finish."
+            ), 408
+        except (ValueError, OSError) as exc:
+            return jsonify(error=str(exc)), 400
 
     upload = request.files.get("file")
     if not upload or not upload.filename:

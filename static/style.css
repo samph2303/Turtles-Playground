@@ -59,6 +59,7 @@ h1 { font-size: 28px; margin: 7px 0 0; letter-spacing: -0.8px; }
   line-height: 1.5; letter-spacing: 5px; opacity: .65; transform: rotate(-8deg);
 }
 .section-heading { margin-bottom: 18px; }
+.section-heading-rgb { margin-top: 38px; }
 .section-heading h2, .result-heading h2 { margin: 0 0 4px; font-size: 19px; }
 .section-heading p { margin: 0; font-size: 12px; }
 .tool-count { font-size: 10px; letter-spacing: 1.3px; color: var(--muted); border: 1px solid var(--border); padding: 8px 10px; border-radius: 7px; }
