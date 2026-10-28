@@ -5,3 +5,6 @@ __pycache__/
 instance/
 uploads/
 outputs/
+
+# Local digit recogniser data
+digit_corrections.db

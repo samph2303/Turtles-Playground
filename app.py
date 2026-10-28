@@ -1,19 +1,57 @@
-
-
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import csv
 import io
 import subprocess
 import sys
+import sqlite3
+import json
 
 from flask import Flask, render_template, request, send_file, jsonify
 from werkzeug.utils import secure_filename
+import torch
+from train_digit_model import DigitNet
 
 app = Flask(__name__)
+MODEL_PATH = Path(__file__).resolve().parent / "models" / "digit_model_28.pth"
+
+checkpoint = torch.load(
+    MODEL_PATH,
+    map_location="cpu",
+    weights_only=True,
+)
+
+digit_model = DigitNet()
+digit_model.load_state_dict(checkpoint["model_state_dict"])
+digit_model.eval()
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024  # 32 MB upload limit
+
+
+DATABASE_PATH = Path(__file__).resolve().parent / "digit_corrections.db"
+
+
+def get_digit_db():
+    connection = sqlite3.connect(DATABASE_PATH)
+    connection.row_factory = sqlite3.Row
+    return connection
+
+
+def init_digit_db():
+    with get_digit_db() as connection:
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS digit_corrections (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                pixels TEXT NOT NULL,
+                label INTEGER NOT NULL CHECK(label BETWEEN 0 AND 9),
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+
+init_digit_db()
+
 
 TOOLS = [
     {
@@ -136,6 +174,97 @@ def converters():
 @app.route("/rgb")
 def rgb():
     return render_template("index.html", tools=TOOLS, page="rgb")
+
+@app.route("/digit-recogniser")
+def digit_recogniser():
+    return render_template(
+        "index.html",
+        tools=TOOLS,
+        page="digit-recogniser",
+    )
+
+
+@app.post("/api/digit-recogniser/predict")
+def predict_digit():
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return jsonify(error="Invalid JSON request."), 400
+
+    pixels = data.get("pixels")
+
+    if not isinstance(pixels, list) or len(pixels) != 784:
+        return jsonify(error="Expected exactly 784 pixel values."), 400
+
+    if any(
+        not isinstance(value, (int, float))
+        or isinstance(value, bool)
+        or not 0 <= value <= 1
+        for value in pixels
+    ):
+        return jsonify(error="Pixel values must be between 0 and 1."), 400
+
+    image = torch.tensor(pixels, dtype=torch.float32).reshape(1, 1, 28, 28)
+
+    with torch.no_grad():
+        logits = digit_model(image)
+        probabilities = torch.softmax(logits, dim=1)[0]
+
+    return jsonify(
+        prediction=int(probabilities.argmax().item()),
+        confidence=round(float(probabilities.max().item()) * 100, 2),
+        probabilities=[
+            round(float(value) * 100, 2)
+            for value in probabilities.tolist()
+        ],
+    )
+
+
+@app.post("/api/digit-recogniser/correct")
+def save_digit_correction():
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return jsonify(error="Invalid JSON request."), 400
+
+    pixels = data.get("pixels")
+    label = data.get("label")
+
+    if not isinstance(pixels, list) or len(pixels) != 784:
+        return jsonify(error="Expected exactly 784 pixel values."), 400
+
+    if any(
+        not isinstance(value, (int, float))
+        or isinstance(value, bool)
+        or not 0 <= value <= 1
+        for value in pixels
+    ):
+        return jsonify(error="Pixel values must be between 0 and 1."), 400
+
+    if not isinstance(label, int) or isinstance(label, bool) or not 0 <= label <= 9:
+        return jsonify(error="Label must be a digit from 0 to 9."), 400
+
+    with get_digit_db() as connection:
+        connection.execute(
+            "INSERT INTO digit_corrections (pixels, label) VALUES (?, ?)",
+            (json.dumps(pixels), label),
+        )
+        count = connection.execute(
+            "SELECT COUNT(*) FROM digit_corrections"
+        ).fetchone()[0]
+
+    return jsonify(success=True, count=count)
+
+
+@app.get("/api/digit-recogniser/corrections")
+def digit_correction_count():
+    with get_digit_db() as connection:
+        count = connection.execute(
+            "SELECT COUNT(*) FROM digit_corrections"
+        ).fetchone()[0]
+
+    return jsonify(count=count)
+
 
 
 @app.post("/run/<tool_id>")

@@ -16,11 +16,17 @@
     <a class="nav-link {% if page == 'home' %}active{% endif %}" href="/">
       ⌂ &nbsp; Home
     </a>
+
     <a class="nav-link {% if page == 'converters' %}active{% endif %}" href="/converters">
       ⇄ &nbsp; File Converters
     </a>
+
     <a class="nav-link {% if page == 'rgb' %}active{% endif %}" href="/rgb">
       ▦ &nbsp; RGB Tools
+    </a>
+
+    <a class="nav-link {% if page == 'digit-recogniser' %}active{% endif %}" href="/digit-recogniser">
+      ✎ &nbsp; Digit Recogniser
     </a>
 
     <div class="sidebar-bottom">
@@ -36,6 +42,7 @@
         <h1>
           {% if page == 'home' %}Home
           {% elif page == 'converters' %}File Converters
+          {% elif page == 'digit-recogniser' %}Digit Recogniser
           {% else %}RGB Tools{% endif %}
         </h1>
       </div>
@@ -79,6 +86,7 @@
         </p>
         <span class="home-card-link">Open RGB tools <span>↗</span></span>
       </a>
+
     </div>
 
     {% elif page == 'converters' %}
@@ -134,7 +142,76 @@
       {% endfor %}
     </section>
 
-    {% else %}
+    {% elif page == 'digit-recogniser' %}
+
+    <section class="welcome">
+      <div>
+        <span class="eyebrow">MACHINE LEARNING</span>
+        <h2>Handwritten Digit Recogniser</h2>
+        <p>
+          Draw a digit from 0 to 9 on the 16×16 grid and let the neural
+          network predict what you wrote.
+        </p>
+      </div>
+      <div class="welcome-art">0<br>1<br>9</div>
+    </section>
+
+    <section class="digit-layout">
+      <div class="digit-card">
+        <div class="section-heading">
+          <div>
+            <h2>Drawing grid</h2>
+            <p>Draw in the grid using your mouse or touchscreen.</p>
+          </div>
+          <span class="tool-count">16 × 16</span>
+        </div>
+
+        <canvas id="digit-canvas" width="256" height="256"
+                aria-label="Draw a digit here"></canvas>
+
+        <div class="digit-controls">
+          <button id="digit-predict" type="button">Recognise digit</button>
+          <button id="digit-clear" class="secondary-button" type="button">Clear</button>
+          <button id="digit-erase" class="secondary-button" type="button">Eraser: off</button>
+        </div>
+
+        <p id="digit-status" class="digit-status" role="status">
+          Draw a digit to get started.
+        </p>
+      </div>
+
+      <div class="digit-card digit-result">
+        <span class="eyebrow">MODEL PREDICTION</span>
+        <div id="digit-prediction" class="digit-prediction">?</div>
+        <p id="digit-confidence">Your prediction will appear here.</p>
+
+      <div class="digit-correction">
+        <h3>Was the prediction wrong?</h3>
+        <p>Select the correct digit to save this example for future training.</p>
+
+        <div id="digit-labels" class="digit-labels">
+          {% for digit in range(10) %}
+          <button type="button" class="digit-label secondary-button"
+                  data-digit="{{ digit }}">{{ digit }}</button>
+          {% endfor %}
+        </div>
+
+        <button id="digit-save-correction" type="button" disabled>
+          Save correction
+        </button>
+
+        <p id="digit-correction-count" class="digit-status">
+          Loading saved examples…
+        </p>
+      </div>
+
+
+        <h3>Class probabilities</h3>
+        <div id="digit-probabilities" class="digit-probabilities"></div>
+      </div>
+    </section>
+
+    {% elif page == 'rgb' %}
 
     <section class="welcome">
       <div>
@@ -200,5 +277,12 @@
   </main>
 
   <script src="{{ url_for('static', filename='app.js') }}"></script>
+
+  {% if page == 'digit-recogniser' %}
+
+  <script src="{{ url_for('static', filename='digit-recogniser.js') }}"></script>
+
+  {% endif %}
+
 </body>
 </html>
